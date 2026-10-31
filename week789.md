@@ -1,282 +1,336 @@
 # 📋 KẾ HOẠCH CHI TIẾT TUẦN 7 – TUẦN 8 – TUẦN 9: HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
-## Bản Đặc Tả Kỹ Thuật Dựa Trên Phân Tích Mã Nguồn Hiện Tại & Kế Hoạch Tuần 1, Tuần 2
+## Bản Đặc Tả Kỹ Thuật Kế Thừa 100% Tuần 2 Hiện Tại (`plan/week2.md`) & Mở Rộng Sang Tuần 8, 9
 
 > **Môn học:** Lập trình nâng cao (2627I_UET.CS2043_6)  
 > **Dự án:** Hệ thống Đấu giá trực tuyến (Online Auction System) — Nhóm 1  
-> **Thời gian nước rút:** 01/11/2026 – 07/11/2026 (7 ngày)  
+> **Thời gian nước rút:** 01/11/2026 – 07/11/2026 (Đúng 7 ngày)  
 > **Cột mốc chấm tiến độ của Giảng viên:** Thứ Bảy, ngày 07/11/2026  
-> **Cơ sở phân tích:**  
-> 1. Mã nguồn hiện tại trên nhánh `dev` và nhánh làm việc (`Entity`, `Auction`, `AuctionManager`, `Bid`, `User`, `Item`, `ItemFactory`, `ClientApp`).  
-> 2. Kế hoạch Tuần 1 ([plan/week1.md](file:///E:/Dai-hoc/HK3/Lap-trinh-nang-cao/Bai-tap-lon/Lap-trinh-nang-cao-BTL-nhom-1/plan/week1.md)) — Nền tảng OOP & Domain Model.  
-> 3. Kế hoạch Tuần 2 ([plan/week2.md](file:///E:/Dai-hoc/HK3/Lap-trinh-nang-cao/Bai-tap-lon/Lap-trinh-nang-cao-BTL-nhom-1/plan/week2.md)) — 5 Trục Chuyên Môn Độc Lập đang thực hiện.
+> **Nguyên tắc kế thừa tối cao:**  
+> - **TUẦN 7 trong bản kế hoạch này chính là TUẦN 2 mà nhóm đang làm dở ([plan/week2.md](file:///E:/Dai-hoc/HK3/Lap-trinh-nang-cao/Bai-tap-lon/Lap-trinh-nang-cao-BTL-nhom-1/plan/week2.md)).** Toàn bộ phân công 5 Mảng Chuyên Môn, tên nhánh `feature/w7-...`, class, method và giao kèo kỹ thuật (Contracts) của Tuần 2 được **giữ nguyên 100%**, không ai phải đổi mảng hay làm lại từ đầu!  
+> - **TUẦN 8** là bước nâng cấp tự nhiên: Bổ sung bộ Custom Exceptions (`InvalidBidException`, `AuctionClosedException`...), viết Unit Test ngoại lệ (`assertThrows`), hoàn thiện FXML theo mô hình MVC.  
+> - **TUẦN 9** là bước tích hợp mạng và hoàn thiện: Cắm Socket Client–Server End-to-End, Broadcast Realtime qua Socket (`Platform.runLater`), lưu trữ file JSON bền vững, và tích hợp Checkstyle Google Style vào Maven/CI.
 
 ---
 
 # 🔍 TỔNG HỢP HIỆN TRẠNG & BÀN ĐẠP TỪ TUẦN 1 VÀ TUẦN 2
 
-### 1. Thành quả đã chốt từ Tuần 1 (`plan/week1.md` - Tuần 6 HK):
-- Đã thiết lập Maven Multi-Module (`auction-server`, `auction-client`), Java 21, JUnit 5.10.2, JavaFX 21.0.2, Gson 2.10.1.
-- `Entity.java`: Lớp cơ sở chứa `id` (UUID), `createdAt`, cơ chế fallback null-safe.
-- Cây kế thừa `User`: `User` (abstract) $\rightarrow$ `Bidder`, `Seller`, `Admin` có validate email, username, phân quyền.
+### 1. Nền tảng đã xong từ Tuần 1 (`plan/week1.md` - Tuần 6 HK):
+- Maven Multi-Module (`auction-server`, `auction-client`), Java 21 LTS, JUnit 5.10.2, JavaFX 21.0.2, Gson 2.10.1.
+- `Entity.java`: Lớp cơ sở chứa `id` (UUID), `createdAt`, fallback null-safe.
+- Cây kế thừa `User`: `User` (abstract) $\rightarrow$ `Bidder`, `Seller`, `Admin`.
 - Cây kế thừa `Item`: `Item` (abstract) $\rightarrow$ `Electronics`, `Art`, `Vehicle`.
-- `ItemFactory.java`: Khởi tạo đối tượng linh hoạt qua mẫu Factory Method.
-- `AuctionManager.java`: Quản lý phiên đấu giá duy nhất theo mẫu Singleton, dùng `ConcurrentHashMap`.
-- `Bid.java`: Đối tượng đặt giá bất biến (`final`), an toàn dữ liệu.
-- Bộ 5 file Unit Test cơ bản: `AuctionManagerTest`, `AuctionTest`, `BidTest`, `ItemFactoryTest`, `UserTest`.
+- `ItemFactory.java`: Factory Method tạo sản phẩm tập trung.
+- `AuctionManager.java`: Singleton quản lý phiên, dùng `ConcurrentHashMap`.
+- `Bid.java`: Đối tượng đặt giá bất biến (`final`).
+- Bộ 5 file test JUnit 5 cơ bản: `AuctionManagerTest`, `AuctionTest`, `BidTest`, `ItemFactoryTest`, `UserTest`.
 
-### 2. Sự tiếp nối từ Tuần 2 (`plan/week2.md` - Tuần 7 HK):
-Nhóm đã phân công 5 thành viên theo **5 Trục Chuyên Môn (Horizontal Tracks)** trên các nhánh `feature/w7-...`. Kế hoạch này **kế thừa 100% các nhánh và mảng công việc của Tuần 2**, không thay đổi vai trò của ai, nâng cấp liên tục qua Tuần 7 $\rightarrow$ Tuần 8 $\rightarrow$ Tuần 9:
-- 🎨 **Mảng 1 (Hùng):** `feature/w7-gui-base` $\rightarrow$ Nền tảng Giao diện JavaFX, Theme CSS, Form quản lý.
-- ⚡ **Mảng 2 (Tuấn):** `feature/w7-realtime-bidding-room` $\rightarrow$ Realtime Observer & Giao diện Phòng đấu giá.
-- 🌐 **Mảng 3 (Sang):** `feature/w7-network-protocol` $\rightarrow$ Hạ tầng Mạng Socket, Gói tin JSON, CI/CD Checkstyle.
-- 💾 **Mảng 4 (Minh):** `feature/w7-persistence-auth` $\rightarrow$ Custom Exceptions, Bảo mật SHA-256 + Salt, Lưu trữ DAO/JSON.
-- ⚙️ **Mảng 5 (Quân):** `feature/w7-concurrency-engine` $\rightarrow$ Khóa an toàn luồng `ReentrantLock`, Timer tự đóng phiên, Test chịu tải.
-
----
-
-# 🏛️ PHẦN 1. TUẦN 7 — ĐA LUỒNG, OBSERVER PATTERN & BẮT ĐẦU JAVAFX
-
-> **Mục tiêu:** Hoàn thiện trọn vẹn các cam kết của Tuần 2 (`plan/week2.md`): Khóa `ReentrantLock` công bằng cho `Auction`, Interface `AuctionObserver`, và bộ giao diện FXML cơ bản nạp qua `SceneManager`.
-
-## 1.1. Bộ câu hỏi vấn đáp miệng Tuần 7 (Ôn tập nội bộ)
-1. *Race Condition và Lost Update trong bài toán đấu giá là gì?*  
-   $\rightarrow$ Khi 2 Bidder cùng bấm đặt giá ở cùng 1 mili-giây, nếu không khóa đồng bộ, cả 2 cùng đọc giá cũ và cùng ghi đè $\rightarrow$ mất lượt đặt giá (*lost update*) hoặc thứ tự giá bị đảo lộn (*race condition*).
-2. *Tại sao phải dùng `new ReentrantLock(true)` (Fair Lock) thay vì từ khóa `synchronized`?*  
-   $\rightarrow$ `synchronized` không cam kết thứ tự luồng (có thể gây starvation). `ReentrantLock(true)` là Fair Lock, xếp hàng luồng theo đúng thứ tự thời gian bấm nút (FIFO), hoàn toàn công bằng cho người tham gia đấu giá.
-3. *Mô hình Observer Pattern trong hệ thống hoạt động như thế nào?*  
-   $\rightarrow$ `Auction` là Subject lưu trạng thái giá. `AuctionObserver` là Interface lắng nghe. Khi có bid mới hoặc đổi trạng thái, `Auction` tự duyệt danh sách và gọi callback thông báo tới giao diện mà không cần Polling F5.
+### 2. Tiến độ đang làm dở của Tuần 2 (`plan/week2.md` - Tuần 7 HK):
+- Đã thêm thư viện `Gson 2.10.1` và liên kết `auction-server` vào `auction-client` trong `pom.xml` (Commit `77869dc`).
+- Cả 5 thành viên đang triển khai trên 5 nhánh cá nhân độc lập của Tuần 2:
+  * 🎨 **Mảng 1: Đỗ Mạnh Hùng** (`feature/w7-gui-base`) $\rightarrow$ GUI Base & CSS Theme.
+  * ⚡ **Mảng 2: Lê Anh Tuấn** (`feature/w7-realtime-bidding-room`) $\rightarrow$ Realtime UI Room & Observer.
+  * 🌐 **Mảng 3: Lê Đức Thiện Sang** (`feature/w7-network-protocol`) $\rightarrow$ Network Protocol & Server Socket.
+  * 💾 **Mảng 4: Hoàng Thế Công Minh** (`feature/w7-persistence-auth`) $\rightarrow$ Persistence & Auth Core.
+  * ⚙️ **Mảng 5: Trần Mạnh Quân** (`feature/w7-concurrency-engine`) $\rightarrow$ Core Engine & Concurrency.
 
 ---
 
-## 1.2. Cây thư mục mã nguồn Tuần 7
-```text
-online-auction-system/
-├── auction-server/
-│   └── src/
-│       ├── main/java/com/auction/server/domain/model/auction/
-│       │   ├── Auction.java                 # [Quân] Thay synchronized bằng ReentrantLock(true), thêm observers
-│       │   ├── AuctionStatus.java           # [Minh] Vòng đời OPEN -> RUNNING -> FINISHED -> PAID/CANCELED
-│       │   ├── AuctionManager.java          # [Sang] Quản lý phiên hoạt động & hủy phiên
-│       │   └── observer/
-│       │       └── AuctionObserver.java     # [Tuấn] Interface Observer chuẩn
-│       └── test/java/com/auction/server/domain/model/auction/
-│           ├── AuctionTest.java             # [Quân] Test đặt giá đa luồng
-│           └── AuctionObserverTest.java     # [Tuấn] Test callback Observer
-└── auction-client/
-    └── src/main/
-        ├── java/com/auction/client/
-        │   ├── ClientApp.java               # [Sang] Nạp theme.css và liên kết SceneManager
-        │   ├── util/
-        │   │   └── SceneManager.java        # [Hùng] Quản lý chuyển đổi Scene JavaFX
-        │   └── controller/
-        │       └── BiddingRoomController.java # [Tuấn] Controller phòng đấu giá (Mock Observer)
-        └── resources/
-            ├── css/
-            │   └── theme.css                # [Hùng] Bộ Dark Theme CSS hiện đại
-            └── fxml/
-                └── BiddingRoomView.fxml     # [Tuấn] Layout phòng đấu giá trực tiếp
+# 🏛️ PHẦN 1. TUẦN 7 — BỔ SUNG NỀN MÓNG & XÂY DỰNG 5 TRỤC ĐỘC LẬP (TUẦN 2 HIỆN TẠI)
+
+> **Mục tiêu:** Kế thừa nguyên văn các cam kết của [plan/week2.md](file:///E:/Dai-hoc/HK3/Lap-trinh-nang-cao/Bai-tap-lon/Lap-trinh-nang-cao-BTL-nhom-1/plan/week2.md). Mỗi thành viên sở hữu 1 khối mã nguồn **tự chạy được, tự test được** trên nhánh riêng bằng Mock data, chưa cần nối mạng với nhau để triệt tiêu hoàn toàn sự phụ thuộc.
+
+## 1.1. Các Giao Kèo Hợp Đồng (Contracts) Tuần 7 (Từ `plan/week2.md`)
+
+### Contract 1: Chuẩn gói tin Mạng (Mảng 3 sở hữu)
+```json
+// Gói tin gửi đi (Request):
+{
+  "action": "LOGIN",
+  "data": { "username": "tuan", "password": "123" },
+  "token": "uuid-neu-da-dang-nhap"
+}
+
+// Gói tin phản hồi (Response):
+{
+  "status": "OK",
+  "message": "Đăng nhập thành công",
+  "data": { "userId": "...", "username": "tuan", "role": "BIDDER" }
+}
+```
+
+### Contract 2: Tầng Lưu Trữ & DAO (Mảng 4 sở hữu)
+```java
+public interface GenericDAO<T extends Entity> {
+    void save(T entity);
+    T findById(String id);
+    List<T> findAll();
+    void update(T entity);
+    void delete(String id);
+}
+
+public interface UserDAO extends GenericDAO<User> {
+    User findByUsername(String username);
+}
+```
+
+### Contract 3: Sự kiện Realtime Observer (Mảng 2 & Mảng 5 phối hợp)
+```java
+public interface AuctionObserver {
+    void onNewBidPlaced(Auction auction, Bid newBid);
+    void onAuctionStatusChanged(Auction auction, AuctionStatus newStatus);
+}
 ```
 
 ---
 
-## 1.3. Đặc tả nhiệm vụ chi tiết từng thành viên trong Tuần 7
-
-### 👤 1. TRẦN MẠNH QUÂN — Mảng 5: Concurrency Fair Lock & Observer trong `Auction`
-* **Nhánh làm việc:** `feature/w7-concurrency-engine`
-* **Hiện trạng trong code:** `Auction.java` đang dùng `public synchronized boolean placeBid()`.
-* **Nhiệm vụ chi tiết:**
-  1. Khai báo khóa công bằng: `private final ReentrantLock lock = new ReentrantLock(true);`
-  2. Khai báo danh sách Observer: `private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();`
-  3. Bổ sung các phương thức quản lý Observer:
-     - `public void attachObserver(AuctionObserver observer)`
-     - `public void detachObserver(AuctionObserver observer)`
-     - `private void notifyNewBid(Bid bid)`: duyệt `observers` gọi `o.onNewBidPlaced(this, bid)`.
-     - `public void notifyStatusChanged(AuctionStatus newStatus)`: duyệt `observers` gọi `o.onAuctionStatusChanged(this, newStatus)`.
-  4. Cập nhật hàm `placeBid(Bidder bidder, double amount)`: Toàn bộ thân hàm bọc trong `lock.lock()` và `finally { lock.unlock(); }`. Khi bid thành công, gọi `notifyNewBid(newBid)`.
-* **Viết Unit Test:** Cập nhật `AuctionTest.java`, bổ sung test 20 luồng đồng thời gọi `placeBid()`.
-* **Lệnh kiểm tra:** `mvn test -Dtest="AuctionTest"` $\rightarrow$ **BUILD SUCCESS**.
+## 1.2. Cây thư mục mã nguồn Tuần 7 (Từ `plan/week2.md`)
+```text
+online-auction-system/
+├── .github/
+│   ├── pull_request_template.md              # [Mảng 3] Template mở PR
+│   └── ISSUE_TEMPLATE/
+│       └── bug_report.md                     # [Mảng 3] Template báo lỗi
+├── docs/
+│   ├── STYLE_GUIDE.md                        # [Mảng 4] Quy chuẩn code, Javadoc, AAA test
+│   └── javafx-guide.md                       # [Mảng 1] Hướng dẫn SceneBuilder & FXML
+│
+├── auction-server/
+│   └── src/
+│       ├── main/java/com/auction/server/
+│       │   ├── ServerApp.java                # [Mảng 3] Khởi chạy Server cổng 8888
+│       │   ├── domain/model/
+│       │   │   ├── auction/
+│       │   │   │   ├── Auction.java          # [Mảng 5 DUY NHẤT SỬA] Lock đa luồng & Notify Observer
+│       │   │   │   ├── AuctionScheduler.java # [Mảng 5] Bộ đếm ngược đóng phiên tự động
+│       │   │   │   └── observer/
+│       │   │   │       └── AuctionObserver.java # [Mảng 2 TẠO INTERFACE]
+│       │   │   └── user/
+│       │   │       └── User.java             # [Mảng 4] Thêm salt (Constructor Overloading)
+│       │   ├── network/                      # [Mảng 3]
+│       │   │   ├── protocol/ (ActionType, ResponseStatus, Request, Response, MessageSerializer)
+│       │   │   └── server/ (AuctionServer, ClientHandler)
+│       │   ├── service/                      # [Mảng 4] UserService
+│       │   ├── security/                     # [Mảng 4] PasswordHasher (SHA-256 + Salt)
+│       │   └── persistence/                  # [Mảng 4] GenericDAO, UserDAO, UserDAOImpl, JsonStorage
+│       └── test/java/com/auction/server/
+│           ├── concurrency/                  # [Mảng 5] AuctionConcurrencyTest
+│           ├── security/                     # [Mảng 4] PasswordHasherTest
+│           ├── persistence/                  # [Mảng 4] UserDAOTest, JsonStorageTest
+│           ├── network/                      # [Mảng 3] MessageSerializerTest, EchoClientTest
+│           └── observer/                     # [Mảng 2] AuctionObserverTest
+│
+└── auction-client/
+    └── src/main/
+        ├── java/com/auction/client/
+        │   ├── ClientApp.java                # [Mảng 1] Nạp LoginView.fxml bằng FXMLLoader
+        │   ├── util/
+        │   │   └── SceneManager.java         # [Mảng 1] Chuyển đổi qua lại các màn hình
+        │   └── controller/
+        │       ├── LoginController.java      # [Mảng 1]
+        │       ├── RegisterController.java   # [Mảng 1]
+        │       ├── SellerDashboardController.java # [Mảng 1]
+        │       └── BiddingRoomController.java # [Mảng 2]
+        └── resources/
+            ├── css/
+            │   └── theme.css                 # [Mảng 1] Dark theme hiện đại dùng chung
+            └── fxml/
+                ├── LoginView.fxml            # [Mảng 1]
+                ├── RegisterView.fxml         # [Mảng 1]
+                ├── SellerDashboard.fxml      # [Mảng 1]
+                ├── AddItemDialog.fxml        # [Mảng 1]
+                └── BiddingRoomView.fxml      # [Mảng 2]
+```
 
 ---
 
-### 👤 2. LÊ ANH TUẤN — Mảng 2: Observer Interface & Giao Diện Phòng Đấu Giá (`BiddingRoom`)
-* **Nhánh làm việc:** `feature/w7-realtime-bidding-room`
-* **Nhiệm vụ chi tiết:**
-  1. Tạo file `com.auction.server.domain.model.auction.observer.AuctionObserver.java`:
-     ```java
-     public interface AuctionObserver {
-         void onNewBidPlaced(Auction auction, Bid newBid);
-         void onAuctionStatusChanged(Auction auction, AuctionStatus newStatus);
-     }
-     ```
-  2. Tạo layout `resources/fxml/BiddingRoomView.fxml`: Gồm nhãn giá cao nhất to 32px `#lblCurrentPrice`, người dẫn đầu `#lblCurrentWinner`, đồng hồ `#lblCountdown`, bảng `TableView` lịch sử bid `#tblBidHistory`, các nút đặt giá nhanh `+1 Bước giá`, `+2 Bước giá`, nút `ĐẶT GIÁ`.
-  3. Viết `BiddingRoomController.java` implements `AuctionObserver`: Cài đặt callback `@Override void onNewBidPlaced(...)` cập nhật Label và thêm 1 dòng vào TableView. Tạo nút "Đặt giá thử" trên giao diện để test nhảy số realtime.
-* **Viết Unit Test:** Tạo `AuctionObserverTest.java` kiểm tra đăng ký và nhận sự kiện Observer.
-* **Lệnh kiểm tra:** `mvn test -Dtest="AuctionObserverTest"` $\rightarrow$ **PASS 100%**.
+## 1.3. Đặc tả nhiệm vụ chi tiết 5 thành viên trong Tuần 7 (Từ `plan/week2.md`)
 
----
-
-### 👤 3. ĐỖ MẠNH HÙNG — Mảng 1: Hệ Thống CSS Dark Theme & Điều Hướng `SceneManager`
+### 👤 1. ĐỖ MẠNH HÙNG — Mảng 1: Client GUI & UX Base (Giao Diện Form & Quản Lý)
 * **Nhánh làm việc:** `feature/w7-gui-base`
-* **Nhiệm vụ chi tiết:**
-  1. Tạo file `resources/css/theme.css`: Thiết kế Dark Theme hiện đại với nền tối `#1e1e2f`, `#27293d`, chữ trắng `#ffffff`. Định dạng `.button` bo góc `8px`, hiệu ứng `:hover` sáng cyan, `:pressed` thụt nhẹ; style cho `.text-field` và `.table-view`.
-  2. Tạo lớp `com.auction.client.util.SceneManager.java` (Singleton):
-     - `public static synchronized SceneManager getInstance()`
-     - `public void setPrimaryStage(Stage stage)`
-     - `public void switchScene(String fxmlPath, String title)`: nạp FXML bằng `FXMLLoader`, gán `theme.css`, chuyển đổi scene mượt mà.
-* **Kiểm tra đầu ra:** Khởi chạy `ClientApp`, mở cửa sổ giao diện 1000x700 với Dark Theme sắc nét.
+* **Công việc cụ thể:**
+  1. Viết tài liệu `docs/javafx-guide.md` hướng dẫn SceneBuilder, đặt `fx:id`, kết nối Controller.
+  2. Tạo `resources/css/theme.css`: Dark Theme hiện đại (màu nền `#1e1e2f`, `#27293d`, chữ trắng, nút bấm bo góc 8px hover cyan, style TableView và TextField).
+  3. Viết `SceneManager.java` (Singleton) quản lý `switchScene(String fxmlPath)` trên Stage chính.
+  4. Sửa `ClientApp.java` nạp `LoginView.fxml` làm màn hình mặc định.
+  5. Dựng FXML và Controller:
+     - `LoginView.fxml` + `LoginController.java`: Ô nhập username, password, nút Login, link chuyển Register.
+     - `RegisterView.fxml` + `RegisterController.java`: Form đăng ký đầy đủ, ComboBox chọn vai trò.
+     - `SellerDashboard.fxml` + `SellerDashboardController.java`: Bảng TableView sản phẩm của Seller, nút mở `AddItemDialog.fxml`.
+* **Tiêu chí nghiệm thu:** Chạy `cd auction-client && mvn javafx:run` mở giao diện Dark Theme sắc nét, chuyển cảnh không lỗi FXML.
 
 ---
 
-### 👤 4. HOÀNG THẾ CÔNG MINH — Mảng 4: Nghiệp Vụ Validate & Luân Chuyển Trạng Thái
-* **Nhánh làm việc:** `feature/w7-persistence-auth`
-* **Nhiệm vụ chi tiết:**
-  1. Bổ sung hàm luân chuyển trạng thái trong `Auction.java`:
-     - `public boolean updateStatus(AuctionStatus newStatus)`: Kiểm tra chuyển đổi hợp lệ (`OPEN` $\rightarrow$ `RUNNING` $\rightarrow$ `FINISHED` $\rightarrow$ `PAID`), kích hoạt `notifyStatusChanged(newStatus)`.
-  2. Tăng cường validate trong `placeBid()`: Kiểm tra chặt chẽ `bidder.getBalance() >= amount` và cấm Seller tự đấu giá sản phẩm của chính mình.
+### 👤 2. LÊ ANH TUẤN — Mảng 2: Realtime UI & Observer (Phòng Đấu Giá Trực Tiếp)
+* **Nhánh làm việc:** `feature/w7-realtime-bidding-room`
+* **Quy tắc chống conflict:** CHỈ TẠO FILE MỚI, KHÔNG sửa trực tiếp vào `Auction.java`.
+* **Công việc cụ thể:**
+  1. Tạo `domain.model.auction.observer.AuctionObserver.java` gồm 2 hàm callback (`onNewBidPlaced`, `onAuctionStatusChanged`).
+  2. Thiết kế `BiddingRoomView.fxml`: Thông tin sản phẩm, nhãn giá cao nhất to 32px `#lblCurrentPrice`, người dẫn đầu `#lblCurrentWinner`, đồng hồ đếm ngược `#lblCountdown`, bảng `TableView` lịch sử bid `#tblBidHistory`, các nút đặt giá nhanh `+1 Bước giá`, `+2 Bước giá`, nút `ĐẶT GIÁ NGAY`.
+  3. Hiện thực `BiddingRoomController.java` implements `AuctionObserver`: Cài đặt callback nhận sự kiện tự động cập nhật Label giá và thêm dòng vào TableView. Bấm nút "Đặt giá thử" tự sinh bid mẫu để kiểm chứng nhảy số realtime.
+  4. Viết `AuctionObserverTest.java`: Tạo mock observer, kiểm tra nhận đúng sự kiện khi callback được gọi.
+* **Tiêu chí nghiệm thu:** `mvn test -Dtest="AuctionObserverTest"` PASS 100%.
 
 ---
 
-### 👤 5. LÊ ĐỨC THIỆN SANG — Mảng 3: Quản Lý Phiên `AuctionManager` & Cấu Hình Khởi Động
+### 👤 3. LÊ ĐỨC THIỆN SANG (Nhóm trưởng) — Mảng 3: Network & Protocol Core (Hạ Tầng Mạng & Server Socket)
 * **Nhánh làm việc:** `feature/w7-network-protocol`
-* **Nhiệm vụ chi tiết:**
-  1. Nâng cấp `AuctionManager.java`: Bổ sung `cancelAuction(String auctionId, User requester)` kiểm tra nếu `requester` là `Admin` hoặc là `Seller` sở hữu phiên thì mới cho phép hủy.
-  2. Cập nhật `ClientApp.java`: Khởi tạo `SceneManager`, nạp `BiddingRoomView.fxml` làm màn hình mặc định ban đầu để cả nhóm kiểm tra giao diện.
+* **Công việc cụ thể:**
+  1. Tạo `.github/pull_request_template.md` và `.github/ISSUE_TEMPLATE/bug_report.md`.
+  2. Tạo `ServerApp.java` chứa `main()` in log chào mừng và gọi `AuctionServer.start()`.
+  3. Thiết kế giao thức gói tin JSON: Enum `ActionType` (`LOGIN`, `REGISTER`, `GET_ACTIVE_AUCTIONS`, `PLACE_BID`, `CREATE_ITEM`, `PING`), Enum `ResponseStatus` (`OK`, `ERROR`, `UNAUTHORIZED`, `NOT_FOUND`), Class `Request`, Class `Response`, Class `MessageSerializer` (Gson).
+  4. Hiện thực Socket Server đa luồng: `AuctionServer.java` (lắng nghe cổng 8888, CachedThreadPool), `ClientHandler.java` (implements Runnable, đọc JSON, gửi trả PONG an toàn luồng `synchronized sendMessage`).
+  5. Viết kịch bản kiểm tra `EchoClientTest` hoặc console test: Kết nối cổng 8888 gửi PING nhận PONG.
+* **Tiêu chí nghiệm thu:** Chạy Server cổng 8888, client console kết nối và nhận phản hồi JSON PONG hợp lệ.
 
 ---
 
-## 1.4. Ma trận Review chéo & Checklist Tuần 7
+### 👤 4. HOÀNG THẾ CÔNG MINH — Mảng 4: Persistence & Auth Core (Lưu Trữ Dữ Liệu, Mã Hóa & User Service)
+* **Nhánh làm việc:** `feature/w7-persistence-auth`
+* **Quy tắc bảo vệ code:** Bổ sung `salt` vào `User.java` bằng Constructor Overloading (`this.salt = "";`) để không phá vỡ test Tuần 1.
+* **Công việc cụ thể:**
+  1. Viết tài liệu quy chuẩn lập trình `docs/STYLE_GUIDE.md` (Naming, Formatting 4 spaces, Javadoc, Pattern AAA).
+  2. Xây dựng `security.PasswordHasher`: `generateSalt()` sinh 16 bytes ngẫu nhiên, `hashPassword()` băm SHA-256, `verifyPassword()`.
+  3. Xây dựng tầng CSDL: Interface `GenericDAO<T>`, `JsonStorage` đọc/ghi JSON bằng Gson pretty printing, `UserDAOImpl` lưu danh sách User vào file `auction-server/data/users.json`.
+  4. Hiện thực `service.UserService`: `register()` kiểm tra trùng lặp, sinh salt, băm mật khẩu và lưu DAO; `login()` tìm user, verify mật khẩu băm.
+  5. Viết Unit Test: `PasswordHasherTest.java`, `UserDAOTest.java`, `UserServiceTest.java`.
+* **Tiêu chí nghiệm thu:** `mvn test -Dtest="PasswordHasherTest,UserDAOTest,UserServiceTest,UserTest"` PASS 100%; file `data/users.json` được tạo ra chứa mật khẩu băm.
+
+---
+
+### 👤 5. TRẦN MẠNH QUÂN — Mảng 5: Core Engine & Concurrency (Động Cơ Đấu Giá & Đa Luồng)
+* **Nhánh làm việc:** `feature/w7-concurrency-engine`
+* **Công việc cụ thể:**
+  1. Nâng cấp An toàn Đa luồng cho `Auction.java`: Dùng `private final ReentrantLock lock = new ReentrantLock(true);` (Fair lock) bọc toàn bộ quá trình kiểm tra giá sàn, bước giá, số dư và ghi nhận `bidHistory`.
+  2. Tích hợp Observer vào `Auction.java`: Khai báo `private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();`, các hàm `attachObserver`, `detachObserver`, `notifyNewBid`. Trong `placeBid()`, bid thành công lập tức gọi `notifyNewBid(newBid)`.
+  3. Xây dựng `AuctionScheduler.java`: Dùng `ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);`. Hàm `scheduleAuctionEnd(Auction auction)` đếm ngược đến `endTime`, tự chuyển trạng thái `FINISHED` và kích hoạt `determineWinner()`.
+  4. Viết `AuctionConcurrencyTest.java`: Dùng `ExecutorService` và `CountDownLatch`, cho 30–50 luồng đồng thời gọi `placeBid()` tại cùng một mili-giây, kiểm tra tuyệt đối không có lost update hay rollback giá.
+* **Tiêu chí nghiệm thu:** `mvn test -Dtest="AuctionConcurrencyTest,AuctionTest"` PASS 100%.
+
+---
+
+## 1.4. Checklist & Review chéo Tuần 7 (Từ `plan/week2.md`)
 
 | PR Author | Nhánh làm việc | Reviewer 1 (Chính) | Reviewer 2 (Phụ) |
 | :--- | :--- | :---: | :---: |
-| **Quân** | `feature/w7-concurrency-engine` | Sang | Tuấn |
-| **Tuấn** | `feature/w7-realtime-bidding-room` | Hùng | Quân |
 | **Hùng** | `feature/w7-gui-base` | Tuấn | Minh |
-| **Minh** | `feature/w7-persistence-auth` | Quân | Sang |
-| **Sang** | `feature/w7-network-protocol` | Minh | Hùng |
-
-### Checklist nghiệm thu Tuần 7:
-- [ ] `Auction.placeBid()` được khóa an toàn bằng `ReentrantLock(true)`.
-- [ ] Interface `AuctionObserver` định nghĩa đúng chuẩn 2 hàm callback.
-- [ ] File `theme.css` Dark theme hoàn chỉnh.
-- [ ] Mở giao diện `BiddingRoomView.fxml`, bấm đặt giá thử thì nhãn giá tự động nhảy số tức thì.
+| **Tuấn** | `feature/w7-realtime-bidding-room` | Quân | Hùng |
+| **Sang** | `feature/w7-network-protocol` | Minh | Quân |
+| **Minh** | `feature/w7-persistence-auth` | Sang | Hùng |
+| **Quân** | `feature/w7-concurrency-engine` | Sang | Tuấn |
 
 ---
 ---
 
 # 🛡️ TUẦN 8 — KIỂM THỬ, NGOẠI LỆ (CUSTOM EXCEPTIONS) & GUI MVC NÂNG CAO
 
-> **Mục tiêu:** Xây dựng hệ thống ngoại lệ chuyên biệt (`exception`), thay thế các lệnh trả về `return false` bằng Custom Exceptions, viết bộ Unit Test JUnit 5 (`assertThrows`), tự động hóa đóng phiên (`AuctionScheduler`), và hoàn thiện các màn hình FXML theo chuẩn MVC.
+> **Mục tiêu:** Kế thừa thành quả của 5 nhánh Tuần 7 đã độc lập chạy được, Tuần 8 tập trung chuẩn hóa hệ thống ngoại lệ chuyên biệt (**Custom Exceptions**), thay thế các lệnh trả về `return false` bằng Custom Exceptions, viết bộ **Unit Test JUnit 5** (`assertThrows`), và hoàn thiện kết nối MVC giữa FXML và Controller.
 
-## 2.1. Bộ câu hỏi vấn đáp miệng Tuần 8 (Ôn tập nội bộ)
-1. *Tại sao cần dùng Custom Exceptions thay vì ném RuntimeException chung chung?*  
-   $\rightarrow$ Giúp phân loại chính xác lỗi nghiệp vụ (như đặt giá sai, phiên đóng, sai mật khẩu), giúp Controller bắt đúng loại lỗi để hiển thị thông báo thân thiện tới người dùng.
-2. *Trong JUnit 5, hàm `assertThrows()` hoạt động như thế nào?*  
+## 2.1. Bộ câu hỏi vấn đáp miệng Tuần 8
+1. *Tại sao trong hệ thống thực tế cần định nghĩa Custom Exceptions thay vì ném RuntimeException chung chung?*  
+   $\rightarrow$ Giúp phân tách chính xác lỗi nghiệp vụ (như đặt giá sai bước giá, phiên đã đóng) với lỗi hệ thống, giúp Controller bắt đúng loại lỗi để hiển thị thông báo Alert thân thiện thay vì làm sập ứng dụng.
+2. *Hàm `assertThrows()` trong JUnit 5 hoạt động ra sao?*  
    $\rightarrow$ `assertThrows(ExpectedException.class, () -> executable)` thực thi đoạn mã; nếu ném đúng class ngoại lệ mong muốn thì test PASS, nếu không ném hoặc ném sai loại thì test FAIL.
-3. *Mô hình MVC trong JavaFX phân tách như thế nào?*  
-   $\rightarrow$ **View** là file FXML; **Controller** bắt sự kiện và gọi Model/Service; **Model** chứa nghiệp vụ thuần túy, hoàn toàn không phụ thuộc vào UI.
+3. *Mô hình MVC trong ứng dụng JavaFX được tổ chức thế nào?*  
+   $\rightarrow$ View là file FXML; Controller bắt sự kiện và gọi Model/Service; Model chứa dữ liệu và nghiệp vụ thuần túy, hoàn toàn không dính mã giao diện.
 
 ---
 
-## 2.2. Cây thư mục mã nguồn Tuần 8
+## 2.2. Cây thư mục mã nguồn phát triển mới trong Tuần 8
 ```text
 online-auction-system/
 ├── auction-server/
 │   └── src/
 │       ├── main/java/com/auction/server/
-│       │   ├── exception/                       # [Minh - Mới] Package Custom Exceptions
+│       │   ├── exception/                       # [Minh] Package Custom Exceptions
 │       │   │   ├── AuctionException.java        # Exception gốc
 │       │   │   ├── InvalidBidException.java     # Lỗi giá đặt không hợp lệ
 │       │   │   ├── AuctionClosedException.java  # Lỗi đấu giá khi phiên đã kết thúc
 │       │   │   └── AuthenticationException.java # Lỗi đăng nhập thất bại
 │       │   ├── domain/model/auction/
-│       │   │   ├── Auction.java                 # [Quân - Sửa đổi] Ném InvalidBidException & AuctionClosedException
-│       │   │   └── AuctionScheduler.java        # [Quân - Mới] Timer đếm ngược tự đóng phiên
+│       │   │   └── Auction.java                 # [Quân] Ném InvalidBidException & AuctionClosedException
 │       │   └── service/
-│       │       └── UserService.java             # [Minh - Mới] Dịch vụ xác thực tài khoản
+│       │       └── UserService.java             # [Minh] Ném AuthenticationException khi sai mật khẩu
 │       └── test/java/com/auction/server/
-│           ├── exception/
-│           │   └── ExceptionTest.java           # [Sang - Mới] Bộ test JUnit 5 cho ngoại lệ
-│           └── auction/
-│               └── AuctionSchedulerTest.java    # [Quân - Mới] Test lập lịch đóng phiên
+│           └── exception/
+│               └── ExceptionTest.java           # [Sang] Bộ test JUnit 5 assertThrows cho ngoại lệ
 └── auction-client/
-    └── src/main/
-        ├── java/com/auction/client/controller/
-        │   ├── LoginController.java             # [Hùng - Mới] Controller Đăng nhập
-        │   ├── RegisterController.java          # [Hùng - Mới] Controller Đăng ký
-        │   ├── SellerDashboardController.java   # [Hùng - Mới] Controller Quản lý kho hàng Seller
-        │   └── BiddingRoomController.java       # [Tuấn - Sửa đổi] Bắt ngoại lệ hiển thị Alert popup
-        └── resources/fxml/
-            ├── LoginView.fxml                   # [Hùng - Mới] Form đăng nhập
-            ├── RegisterView.fxml                # [Hùng - Mới] Form đăng ký tài khoản
-            ├── SellerDashboard.fxml             # [Hùng - Mới] Bảng điều khiển người bán
-            └── AddItemDialog.fxml               # [Hùng - Mới] Hộp thoại tạo sản phẩm mới
+    └── src/main/java/com/auction/client/controller/
+        ├── LoginController.java                 # [Hùng] Bắt AuthenticationException hiển thị label đỏ
+        └── BiddingRoomController.java           # [Tuấn] Bắt InvalidBidException hiển thị popup Alert
 ```
 
 ---
 
-## 2.3. Đặc tả nhiệm vụ chi tiết từng thành viên trong Tuần 8
+## 2.3. Đặc tả nhiệm vụ chi tiết 5 thành viên trong Tuần 8
 
-### 👤 1. HOÀNG THẾ CÔNG MINH — Mảng 4: Cụm Custom Exceptions & Dịch Vụ `UserService`
+### 👤 1. HOÀNG THẾ CÔNG MINH — Cụm Custom Exceptions & Cập Nhật `UserService`
 * **Nhánh làm việc:** `feature/w8-minh/custom-exceptions-auth`
-* **Nhiệm vụ chi tiết:**
-  1. Tạo package `com.auction.server.exception` gồm 4 lớp:
-     - `AuctionException.java` (`extends RuntimeException`): Lớp cha chung.
-     - `InvalidBidException.java`: Ném ra khi giá đặt nhỏ hơn giá sàn, nhỏ hơn bước giá, hoặc số dư không đủ.
-     - `AuctionClosedException.java`: Ném ra khi đặt giá vào phiên không ở trạng thái `RUNNING`.
-     - `AuthenticationException.java`: Ném ra khi đăng nhập thất bại.
-  2. Tạo lớp `com.auction.server.service.UserService.java`:
-     - `register(username, password, email, role)`: Validate thông tin, ném `AuctionException("Username đã tồn tại")` nếu trùng.
-     - `login(username, password)`: Ném `AuthenticationException("Sai tên đăng nhập hoặc mật khẩu")` nếu thông tin không khớp.
+* **Công việc cụ thể:**
+  1. Tạo package `com.auction.server.exception` gồm 4 lớp ngoại lệ:
+     - `AuctionException.java` (`extends RuntimeException`): Lớp cha gốc.
+     - `InvalidBidException.java` (`extends AuctionException`): Ném ra khi giá đặt nhỏ hơn giá sàn, nhỏ hơn bước giá, hoặc số dư không đủ.
+     - `AuctionClosedException.java` (`extends AuctionException`): Ném ra khi đặt giá vào phiên không ở trạng thái `RUNNING`.
+     - `AuthenticationException.java` (`extends AuctionException`): Ném ra khi đăng nhập thất bại.
+  2. Cập nhật `UserService.java`:
+     - Khi đăng nhập sai mật khẩu hoặc không tìm thấy user $\rightarrow$ ném `AuthenticationException("Sai tên đăng nhập hoặc mật khẩu!")`.
+     - Khi đăng ký trùng username $\rightarrow$ ném `AuctionException("Tên đăng nhập đã tồn tại!")`.
 
 ---
 
-### 👤 2. TRẦN MẠNH QUÂN — Mảng 5: Refactor Ném Ngoại Lệ & Bộ Đếm Thời Gian `AuctionScheduler`
+### 👤 2. TRẦN MẠNH QUÂN — Refactor Ném Ngoại Lệ Trong `Auction.java` & Củng Cố Scheduler
 * **Nhánh làm việc:** `feature/w8-quan/exception-refactor-scheduler`
-* **Nhiệm vụ chi tiết:**
+* **Công việc cụ thể:**
   1. Refactor hàm `placeBid()` trong `Auction.java`:
-     - Thay thế việc `return false` bằng việc ném Custom Exceptions:
-       - Nếu phiên không `OPEN`/`RUNNING` $\rightarrow$ ném `AuctionClosedException`.
-       - Nếu số tiền không hợp lệ hoặc số dư không đủ $\rightarrow$ ném `InvalidBidException`.
-  2. Tạo lớp `com.auction.server.domain.model.auction.AuctionScheduler.java`:
-     - Sử dụng `private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);`
-     - Phương thức `public void scheduleAuctionEnd(Auction auction)`: Tính số mili-giây còn lại đến `auction.getEndTime()`. Khi hết giờ $\rightarrow$ tự động gọi `auction.updateStatus(AuctionStatus.FINISHED)`, kích hoạt `auction.determineWinner()`, và thông báo tới các Observer.
-     - Phương thức `public void shutdown()`: dừng an toàn luồng đếm thời gian.
+     - Thay thế việc `return false` bằng cách ném Custom Exceptions:
+       - Nếu phiên không `RUNNING` $\rightarrow$ ném `AuctionClosedException("Phiên đấu giá đang đóng!")`.
+       - Nếu số tiền nhỏ hơn bước giá hoặc số dư không đủ $\rightarrow$ ném `InvalidBidException("Giá đặt không hợp lệ hoặc số dư không đủ!")`.
+  2. Củng cố `AuctionScheduler.java`: Đảm bảo khi đếm ngược hết giờ, phiên chuyển trạng thái sang `FINISHED`, kích hoạt `determineWinner()`, và nếu có ai cố đặt giá sau thời điểm này sẽ bị ném ngay `AuctionClosedException`.
 
 ---
 
-### 👤 3. LÊ ĐỨC THIỆN SANG — Mảng 3: Bộ Kiểm Thử Ngoại Lệ JUnit 5 & Rà Soát SOLID
+### 👤 3. LÊ ĐỨC THIỆN SANG — Bộ Kiểm Thử Ngoại Lệ JUnit 5 & Tái Cấu Trúc SOLID
 * **Nhánh làm việc:** `feature/w8-sang/exception-test-solid`
-* **Nhiệm vụ chi tiết:**
+* **Công việc cụ thể:**
   1. Tạo file `com.auction.server.exception.ExceptionTest.java`:
      - Viết tối thiểu 8 ca kiểm thử bắt buộc sử dụng `assertThrows`:
-       - Test ném `InvalidBidException` khi đặt giá nhỏ hơn bước giá tối thiểu.
-       - Test ném `InvalidBidException` khi số dư tài khoản của Bidder nhỏ hơn mức giá đặt.
-       - Test ném `AuctionClosedException` khi đặt giá vào phiên đã `FINISHED` hoặc `CANCELED`.
-       - Test ném `AuthenticationException` khi đăng nhập với mật khẩu sai.
-  2. Rà soát chuẩn hóa SOLID: Đảm bảo toàn bộ thuộc tính trong các Entity đều là `private`, loại bỏ mã nguồn thừa (*code smells*).
+       - `assertThrows(InvalidBidException.class, () -> auction.placeBid(bidder, 50.0));`
+       - `assertThrows(AuctionClosedException.class, () -> auction.placeBid(bidder, 200.0));`
+       - `assertThrows(AuthenticationException.class, () -> userService.login("tuan", "wrongpass"));`
+  2. Rà soát chuẩn hóa SOLID theo tài liệu `docs/STYLE_GUIDE.md` của Minh: Đảm bảo toàn bộ thuộc tính trong các Entity đều là `private`, loại bỏ mã nguồn thừa.
 * **Lệnh kiểm tra:** `mvn test -Dtest="ExceptionTest"` $\rightarrow$ **PASS 100%**.
 
 ---
 
-### 👤 4. ĐỖ MẠNH HÙNG — Mảng 1: Hoàn Thiện Các Form FXML Chuẩn MVC
+### 👤 4. ĐỖ MẠNH HÙNG — Hoàn Thiện MVC Cho Các Form Giao Diện
 * **Nhánh làm việc:** `feature/w8-hung/mvc-form-views`
-* **Nhiệm vụ chi tiết:**
-  1. Tạo `resources/fxml/LoginView.fxml` + `LoginController.java`: Ô nhập username, password, nút Đăng nhập. Nhãn `#lblError` hiển thị chữ đỏ khi bắt ngoại lệ `AuthenticationException`. Bấm Đăng nhập thành công $\rightarrow$ chuyển sang `SellerDashboard.fxml`.
-  2. Tạo `resources/fxml/RegisterView.fxml` + `RegisterController.java`: Form đăng ký đầy đủ thông tin.
-  3. Tạo `resources/fxml/SellerDashboard.fxml` + `SellerDashboardController.java`: Bảng `TableView` danh sách sản phẩm đăng bán, nút mở hộp thoại popup `AddItemDialog.fxml` để thêm sản phẩm mới.
+* **Công việc cụ thể:**
+  1. Hoàn thiện `LoginController.java`: Khi gọi `UserService.login()` thất bại, bắt `AuthenticationException` và hiển thị chữ đỏ thông báo lỗi lên `#lblError`. Đăng nhập thành công chuyển sang `SellerDashboard.fxml`.
+  2. Hoàn thiện `RegisterController.java`: Kiểm tra form đăng ký, bắt ngoại lệ nếu username đã tồn tại.
+  3. Hoàn thiện `SellerDashboardController.java`: Đổ danh sách sản phẩm vào TableView, mở hộp thoại `AddItemDialog.fxml` để thêm sản phẩm mới tương ứng với `ItemFactory`.
 
 ---
 
-### 👤 5. LÊ ANH TUẤN — Mảng 2: Xử Lý Ngoại Lệ & Đồng Hồ Đếm Ngược Trên UI Phòng Đấu Giá
+### 👤 5. LÊ ANH TUẤN — Xử Lý Ngoại Lệ & Đồng Hồ Đếm Ngược Trên UI Phòng Đấu Giá
 * **Nhánh làm việc:** `feature/w8-tuan/mvc-bidding-room-controller`
-* **Nhiệm vụ chi tiết:**
+* **Công việc cụ thể:**
   1. Cập nhật `BiddingRoomController.java`:
-     - Khi bấm nút `ĐẶT GIÁ`: Bọc trong khối `try-catch`, bắt `InvalidBidException` hoặc `AuctionClosedException` và mở popup `Alert(AlertType.WARNING)` hiển thị thông báo lỗi thân thiện thay vì làm sập ứng dụng.
-  2. Xây dựng đồng hồ đếm ngược trực quan: Sử dụng `javafx.animation.Timeline` chạy mỗi 1 giây cập nhật thời gian còn lại lên `#lblCountdown`. Khi còn dưới 60 giây, đổi chữ sang màu đỏ cảnh báo.
+     - Bắt ngoại lệ từ Model khi bấm nút `ĐẶT GIÁ`:
+       ```java
+       try {
+           double amount = Double.parseDouble(txtBidAmount.getText().trim());
+           auction.placeBid(currentUser, amount);
+       } catch (NumberFormatException e) {
+           showAlert("Lỗi nhập liệu", "Vui lòng nhập một số tiền hợp lệ!");
+       } catch (InvalidBidException | AuctionClosedException e) {
+           showAlert("Từ chối đặt giá", e.getMessage());
+       }
+       ```
+     - Hàm `showAlert(String title, String content)`: Mở cửa sổ popup `Alert(AlertType.WARNING)`.
+  2. Đồng hồ đếm ngược trực quan: Sử dụng `javafx.animation.Timeline` chạy mỗi 1 giây cập nhật thời gian còn lại lên `#lblCountdown`. Khi còn dưới 60 giây, đổi chữ sang màu đỏ cảnh báo.
 
 ---
 
-## 2.4. Ma trận Review chéo & Checklist Tuần 8
+## 2.4. Checklist & Review chéo Tuần 8
 
 | PR Author | Nhánh làm việc | Reviewer 1 (Chính) | Reviewer 2 (Phụ) |
 | :--- | :--- | :---: | :---: |
@@ -286,31 +340,22 @@ online-auction-system/
 | **Hùng** | `feature/w8-hung/mvc-form-views` | Tuấn | Sang |
 | **Tuấn** | `feature/w8-tuan/mvc-bidding-room-controller` | Hùng | Quân |
 
-### Checklist nghiệm thu Tuần 8:
-- [ ] 4 lớp Custom Exception đã được tạo đúng package.
-- [ ] Hàm `Auction.placeBid()` ném đúng ngoại lệ thay vì return false.
-- [ ] Bộ test `ExceptionTest.java` có tối thiểu 8 ca test PASS 100%.
-- [ ] Giao diện bắt ngoại lệ hiển thị popup hoặc label đỏ, không bị văng ứng dụng.
-- [ ] Kiến trúc JavaFX tuân thủ nghiêm ngặt MVC (FXML tách rời Controller).
-
 ---
 ---
 
 # 🌐 TUẦN 9 — TÍCH HỢP HỆ THỐNG, MẠNG SOCKET & LƯU TRỮ DỮ LIỆU
 
-> **Mục tiêu:** Xây dựng **Hạ tầng Mạng Socket Client–Server đa luồng**, chuẩn hóa gói tin **JSON (Gson)**, lưu trữ dữ liệu ra file bằng **DAO & JsonStorage**, băm mật khẩu **SHA-256 + Salt**, và tích hợp **Checkstyle Google Java Style** vào Maven + GitHub Actions.
+> **Mục tiêu:** Kết nối hoàn chỉnh hạ tầng mạng Socket Client–Server End-to-End, triển khai cơ chế **Broadcast Realtime qua Socket** (`Platform.runLater`), lưu trữ CSDL phiên đấu giá ra file JSON, và tích hợp **Checkstyle Google Java Style** vào Maven + GitHub Actions.
 
-## 3.1. Bộ câu hỏi vấn đáp miệng Tuần 9 (Ôn tập nội bộ)
-1. *Cơ chế hoạt động của ServerSocket và Socket trong Java?*  
+## 3.1. Bộ câu hỏi vấn đáp miệng Tuần 9
+1. *Cơ chế hoạt động của Socket Client-Server đa luồng?*  
    $\rightarrow$ `ServerSocket.accept()` lắng nghe tại cổng 8888. Khi có Client kết nối, Server bàn giao Socket đó cho 1 `ClientHandler` chạy trên Thread Pool để phục vụ song song, không làm nghẽn luồng tiếp nhận chính.
 2. *Tại sao khi cập nhật giao diện JavaFX từ luồng Socket bắt buộc phải dùng `Platform.runLater()`?*  
    $\rightarrow$ JavaFX tuân thủ nguyên tắc *Single-Threaded UI Rule*. Mọi thao tác vẽ hoặc thay đổi component bắt buộc phải diễn ra trên luồng chính *JavaFX Application Thread*. Dữ liệu mạng chạy trên luồng ngầm, do đó phải đưa tác vụ vào hàng đợi của luồng UI qua `Platform.runLater()`.
-3. *Tại sao phải thêm chuỗi Salt ngẫu nhiên khi băm mật khẩu bằng SHA-256?*  
-   $\rightarrow$ Thêm Salt ngẫu nhiên 16 bytes giúp vô hiệu hóa kỹ thuật tấn công *Rainbow Table* (bảng tra cứu mật khẩu dựng sẵn) và đảm bảo hai tài khoản có cùng mật khẩu vẫn có chuỗi băm hoàn toàn khác nhau.
 
 ---
 
-## 3.2. Cây thư mục mã nguồn Tuần 9
+## 3.2. Cây thư mục mã nguồn phát triển mới trong Tuần 9
 ```text
 online-auction-system/
 ├── pom.xml                                      # [Sang] Thêm maven-checkstyle-plugin
@@ -318,58 +363,36 @@ online-auction-system/
 │   └── maven-ci.yml                             # [Sang] CI kiểm tra cả test và checkstyle
 ├── auction-server/
 │   ├── data/                                    # [Minh] Thư mục chứa CSDL JSON
-│   │   ├── users.json
-│   │   └── auctions.json
+│   │   ├── users.json                           # Đã có từ Tuần 7
+│   │   └── auctions.json                        # [Minh - Mới] Danh sách phiên và lịch sử bid
 │   └── src/
 │       ├── main/java/com/auction/server/
-│       │   ├── security/
-│       │   │   └── PasswordHasher.java          # [Minh] Băm mật khẩu SHA-256 + Salt
 │       │   ├── persistence/
-│       │   │   ├── GenericDAO.java              # [Minh] Interface Generic DAO
-│       │   │   ├── UserDAOImpl.java             # [Minh] Đọc ghi data/users.json
-│       │   │   ├── AuctionDAOImpl.java          # [Minh] Đọc ghi data/auctions.json
-│       │   │   └── JsonStorage.java             # [Minh] Tiện ích File I/O Gson Pretty
-│       │   └── network/
-│       │       ├── protocol/                    # [Sang] Gói tin chuẩn JSON
-│       │       │   ├── ActionType.java          # Enum các hành động mạng
-│       │       │   ├── ResponseStatus.java      # Enum mã phản hồi (OK, ERROR...)
-│       │       │   ├── Request.java             # Object gói tin Client gửi
-│       │       │   ├── Response.java            # Object gói tin Server trả
-│       │       │   └── MessageSerializer.java   # Chuyển đổi JSON bằng Gson
-│       │       └── server/
-│       │           ├── AuctionServer.java       # [Sang] ServerSocket cổng 8888 đa luồng
-│       │           └── ClientHandler.java       # [Sang] Phục vụ từng Client riêng biệt
+│       │   │   └── AuctionDAOImpl.java          # [Minh - Mới] Đọc ghi data/auctions.json
+│       │   └── network/server/
+│       │       └── AuctionServer.java           # [Sang - Hoàn thiện] Thêm hàm broadcast() push realtime
 │       └── test/java/com/auction/server/
-│           ├── concurrency/
-│           │   └── AuctionConcurrencyTest.java  # [Quân] Test 50 luồng đồng thời (CountDownLatch)
-│           └── persistence/
-│               └── UserDAOTest.java             # [Minh] Test đọc ghi file JSON
+│           └── concurrency/
+│               └── AuctionConcurrencyTest.java  # [Quân - Nâng cấp] Test 50 luồng CountDownLatch
 └── auction-client/
     └── src/main/java/com/auction/client/
         ├── network/
-        │   └── AuctionClient.java               # [Tuấn] Socket Client chạy ngầm
+        │   └── AuctionClient.java               # [Tuấn - Mới] Socket Client chạy ngầm nhận push
         └── controller/
-            └── (Các Controller kết nối với AuctionClient thay vì mock data) # [Hùng & Tuấn]
+            └── (Các Controller kết nối với AuctionClient gửi Request thật qua Socket) # [Hùng & Tuấn]
 ```
 
 ---
 
-## 3.3. Đặc tả nhiệm vụ chi tiết từng thành viên trong Tuần 9
+## 3.3. Đặc tả nhiệm vụ chi tiết 5 thành viên trong Tuần 9
 
-### 👤 1. LÊ ĐỨC THIỆN SANG — Mảng 3: Hạ Tầng Socket Server, Giao Thức JSON & Checkstyle
+### 👤 1. LÊ ĐỨC THIỆN SANG — Mảng 3: Hoàn Thiện Socket Server, Broadcast & Checkstyle
 * **Nhánh làm việc:** `feature/w9-sang/socket-server-checkstyle`
-* **Nhiệm vụ chi tiết:**
-  1. Thiết kế Giao thức Gói tin chuẩn JSON (`com.auction.server.network.protocol`):
-     - `ActionType`: `LOGIN`, `REGISTER`, `GET_AUCTIONS`, `PLACE_BID`, `CREATE_ITEM`, `NEW_BID_NOTIFICATION`, `PING`.
-     - `ResponseStatus`: `OK`, `ERROR`, `UNAUTHORIZED`, `NOT_FOUND`.
-     - `Request.java`: `action: ActionType`, `data: Map<String, Object>`, `token: String`.
-     - `Response.java`: `status: ResponseStatus`, `message: String`, `data: Object`.
-     - `MessageSerializer.java`: Chuyển đổi Gson giữa `Request`/`Response` và chuỗi JSON.
-  2. Hiện thực `AuctionServer.java` & `ClientHandler.java`:
-     - Mở `ServerSocket` cổng `8888`.
-     - Quản lý luồng Client bằng `ExecutorService threadPool = Executors.newCachedThreadPool();`.
+* **Công việc cụ thể:**
+  1. Nâng cấp `AuctionServer.java`:
      - Quản lý danh sách kết nối: `List<ClientHandler> clients = new CopyOnWriteArrayList<>();`.
      - Hàm `broadcast(Response res)`: Duyệt `clients` gửi gói tin cập nhật tới tất cả Client đang kết nối.
+  2. Nâng cấp `ClientHandler.java`: Tiếp nhận `Request(ActionType.PLACE_BID)`, gọi `Auction.placeBid()`, và kích hoạt `server.broadcast(newBidResponse)`.
   3. Cấu hình `maven-checkstyle-plugin` (Google Java Style) vào `pom.xml` và cập nhật file CI `.github/workflows/maven-ci.yml`.
 * **Lệnh kiểm tra:** `mvn checkstyle:check` $\rightarrow$ **BUILD SUCCESS (0 lỗi format)**.
 
@@ -377,10 +400,10 @@ online-auction-system/
 
 ### 👤 2. LÊ ANH TUẤN — Mảng 2: Socket Client & Realtime Push Cập Nhật Giao Diện
 * **Nhánh làm việc:** `feature/w9-tuan/socket-client-realtime`
-* **Nhiệm vụ chi tiết:**
+* **Công việc cụ thể:**
   1. Tạo lớp `com.auction.client.network.AuctionClient.java`:
-     - Mở kết nối Socket tới Server cổng `8888`.
-     - Khởi chạy một luồng chạy ngầm liên tục lắng nghe các gói tin JSON push từ Server.
+     - Mở kết nối Socket tới Server cổng 8888.
+     - Luồng ngầm liên tục đọc gói tin push từ Server.
      - Hàm gửi dữ liệu: `public void sendRequest(Request request)`.
   2. Tích hợp Realtime Update vào `BiddingRoomController`:
      - Khi nhận gói tin `NEW_BID_NOTIFICATION`:
@@ -395,48 +418,38 @@ online-auction-system/
 
 ---
 
-### 👤 3. HOÀNG THẾ CÔNG MINH — Mảng 4: Bảo Mật Mật Khẩu (SHA-256 + Salt) & Tầng Lưu Trữ DAO
+### 👤 3. HOÀNG THẾ CÔNG MINH — Mảng 4: Mở Rộng Lưu Trữ CSDL `auctions.json`
 * **Nhánh làm việc:** `feature/w9-minh/persistence-security-dao`
-* **Nhiệm vụ chi tiết:**
-  1. Tạo lớp `com.auction.server.security.PasswordHasher.java`:
-     - `public static String generateSalt()`: Sinh chuỗi ngẫu nhiên 16 bytes bằng `SecureRandom`.
-     - `public static String hashPassword(String password, String salt)`: Băm bằng `SHA-256`.
-     - `public static boolean verifyPassword(String inputPassword, String storedHash, String storedSalt)`.
-  2. Xây dựng Tầng Lưu Trữ File JSON (`persistence`):
-     - `GenericDAO<T extends Entity>`: Interface cung cấp 5 hàm CRUD: `save()`, `findById()`, `findAll()`, `update()`, `delete()`.
-     - `JsonStorage.java`: Tiện ích đọc và ghi danh sách đối tượng Java ra file `.json` bằng Gson pretty printing.
-     - `UserDAOImpl.java`: Đọc/ghi danh sách tài khoản vào file `data/users.json`. Mật khẩu lưu ở dạng băm kèm salt.
-     - `AuctionDAOImpl.java`: Đọc/ghi danh sách phiên đấu giá vào file `data/auctions.json`. Khi khởi động Server, tự động tải dữ liệu từ file vào bộ nhớ RAM.
+* **Công việc cụ thể:**
+  1. Hiện thực `AuctionDAOImpl.java`:
+     - Đọc/ghi danh sách phiên đấu giá và `bidHistory` vào file `auction-server/data/auctions.json`.
+     - Khi khởi động Server, tự động tải dữ liệu từ file vào bộ nhớ `AuctionManager`.
+* **Lệnh kiểm tra:** `mvn test -Dtest="UserDAOTest"` PASS 100%.
 
 ---
 
-### 👤 4. TRẦN MẠNH QUÂN — Mảng 5: Bộ Kiểm Thử Concurrency Chuyên Sâu (50 Threads)
+### 👤 4. TRẦN MẠNH QUÂN — Mảng 5: Bộ Kiểm Thử Concurrency Áp Lực Cao (50 Threads)
 * **Nhánh làm việc:** `feature/w9-quan/concurrency-stress-test`
-* **Nhiệm vụ chi tiết:**
-  1. Viết `AuctionConcurrencyTest.java` chuyên sâu:
-     - Tạo 1 phiên đấu giá với giá khởi điểm `1,000.0`, bước giá `50.0`.
-     - Tạo **50 đối tượng `Bidder`** cùng số dư lớn.
-     - Sử dụng `CountDownLatch readyLatch = new CountDownLatch(50);` và `CountDownLatch startLatch = new CountDownLatch(1);` để ép 50 luồng xuất phát tại cùng một mili-giây.
-     - Dùng `ExecutorService executor = Executors.newFixedThreadPool(50);`.
-  2. Assertions kiểm tra:
-     - Không phát sinh ngoại lệ tranh chấp luồng.
-     - Danh sách `bidHistory` có giá tăng dần đơn điệu, không có hiện tượng nhảy lùi giá (*rollback*).
-     - Giá cao nhất cuối cùng `currentHighestBid` bằng chính xác giá của lượt bid cuối cùng trong lịch sử.
+* **Công việc cụ thể:**
+  1. Nâng cấp `AuctionConcurrencyTest.java`:
+     - Tạo 1 phiên đấu giá, 50 Bidder cùng số dư lớn.
+     - Dùng `CountDownLatch(50)` kích hoạt 50 luồng xuất phát tại cùng một mili-giây.
+     - Assertions kiểm tra: Không race condition, không rollback giá, giá cao nhất cuối cùng khớp với lịch sử.
 * **Lệnh kiểm tra:** `mvn test -Dtest="AuctionConcurrencyTest"` $\rightarrow$ **PASS 100%**.
 
 ---
 
-### 👤 5. ĐỖ MẠNH HÙNG — Mảng 1: Tích Hợp GUI Với Hạ Tầng Mạng Socket
+### 👤 5. ĐỖ MẠNH HÙNG — Mảng 1: Kết Nối Toàn Bộ GUI Với Socket Client
 * **Nhánh làm việc:** `feature/w9-hung/gui-socket-integration`
-* **Nhiệm vụ chi tiết:**
+* **Công việc cụ thể:**
   1. Chuyển đổi các Controller (`LoginController`, `RegisterController`, `SellerDashboardController`) sang gửi `Request` qua `AuctionClient`:
-     - Khi bấm Đăng nhập $\rightarrow$ gửi `Request(ActionType.LOGIN)` lên Server, đợi phản hồi `Response(status=OK)` mới chuyển màn hình.
-     - Khi tạo sản phẩm mới $\rightarrow$ gửi `Request(ActionType.CREATE_ITEM)` lên Server để lưu vào file CSDL JSON.
+     - Bấm Đăng nhập $\rightarrow$ gửi `Request(ActionType.LOGIN)` lên Server, đợi `Response(status=OK)` mới chuyển màn hình.
+     - Tạo sản phẩm mới $\rightarrow$ gửi `Request(ActionType.CREATE_ITEM)` lên Server để lưu vào file JSON.
   2. Xử lý lỗi ngắt kết nối: Hiển thị hộp thoại cảnh báo nếu Server chưa bật hoặc bị mất mạng đột ngột.
 
 ---
 
-## 3.4. Ma trận Review chéo & Checklist Tuần 9
+## 3.4. Checklist & Review chéo Tuần 9
 
 | PR Author | Nhánh làm việc | Reviewer 1 (Chính) | Reviewer 2 (Phụ) |
 | :--- | :--- | :---: | :---: |
@@ -445,11 +458,3 @@ online-auction-system/
 | **Minh** | `feature/w9-minh/persistence-security-dao` | Sang | Hùng |
 | **Quân** | `feature/w9-quan/concurrency-stress-test` | Sang | Tuấn |
 | **Hùng** | `feature/w9-hung/gui-socket-integration` | Tuấn | Minh |
-
-### Checklist nghiệm thu Tuần 9:
-- [ ] Lệnh `mvn checkstyle:check` đạt chuẩn Google Java Style.
-- [ ] Khởi động `AuctionServer` cổng 8888 chạy nền ổn định.
-- [ ] Dữ liệu người dùng được băm SHA-256 + Salt và lưu ra file `data/users.json`.
-- [ ] Mở 2 Client đặt giá: Giá nhảy tức thì trên cả 2 màn hình qua Socket và `Platform.runLater()`.
-- [ ] Tắt Server rồi bật lại: Toàn bộ phiên và lịch sử bid vẫn còn nguyên vẹn.
-- [ ] Test `AuctionConcurrencyTest` 50 luồng PASS 100%.
